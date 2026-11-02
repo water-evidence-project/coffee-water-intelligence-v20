@@ -29,7 +29,30 @@
     document.addEventListener('cwi-language-changed',update);
     update();
   }
+
+  // Public source access and scientific feedback; visitors cannot edit this repository.
+  function initSourceFeedbackLink(){
+    if (document.getElementById('cwi-source-feedback-link')) return;
+    const link = document.createElement('a');
+    link.id = 'cwi-source-feedback-link';
+    link.className = 'cwi-source-feedback-link';
+    link.href = 'https://github.com/water-evidence-project/coffee-water-intelligence-v20';
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.innerHTML = '<span class="cwi-source-feedback-text"></span><span class="cwi-source-feedback-arrow" aria-hidden="true">↗</span>';
+    const update = () => {
+      const label = tr('Mã nguồn & góp ý', 'Source & feedback');
+      link.querySelector('.cwi-source-feedback-text').textContent = label;
+      link.setAttribute('aria-label', tr('Xem mã nguồn và gửi góp ý trên GitHub (mở thẻ mới)', 'View source and give feedback on GitHub (opens in new tab)'));
+      link.title = tr('Xem mã nguồn · Góp ý tại mục Issues', 'View source · Give feedback in Issues');
+    };
+    document.body.appendChild(link);
+    document.addEventListener('cwi-language-changed', update);
+    update();
+  }
+
   function init(){
+    initSourceFeedbackLink();
     for(const row of cases)helpFor(...row);
     const policy=$('#pstudio-export');
     if(policy){
