@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#eef5fb">
+<title>Bình chọn người thuyết trình</title>
+<style>
+:root{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#183047;background:#eef4f9;font-synthesis:none}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;padding:34px 16px;background:linear-gradient(145deg,#f4f8fc,#e7f0f8)}
+main{max-width:650px;margin:0 auto}.brand{font-size:12px;letter-spacing:.15em;color:#62809a;font-weight:700;text-transform:uppercase;margin:8px 0 13px}
+.card{background:#fff;border:1px solid #dce7f0;border-radius:18px;padding:30px;box-shadow:0 12px 40px #29496612}
+h1{font-size:clamp(25px,5vw,34px);letter-spacing:-.04em;margin:0 0 10px;color:#17344d}
+.lead{font-size:15px;line-height:1.65;color:#587087;margin:0 0 25px}
+.progress{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:#607b91;margin-bottom:12px}
+.counter{font-weight:700;color:#24618b}
+.options{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.option{display:flex;align-items:center;gap:12px;border:1px solid #d7e3ed;border-radius:12px;padding:16px;background:#fbfdff;cursor:pointer;transition:.15s}
+.option:hover{border-color:#8fb5d1;background:#f5faff}
+.option.selected{border:2px solid #3479a8;background:#edf6fc;padding:15px}
+.option input{width:18px;height:18px;accent-color:#276f9e}
+.option strong{font-size:16px;letter-spacing:.02em}
+button.primary{width:100%;border:0;border-radius:11px;padding:15px;background:#236c99;color:#fff;font-size:15px;font-weight:700;margin-top:22px;cursor:pointer}
+button.primary:disabled{background:#a8bdcc;cursor:not-allowed}
+.notice{margin-top:18px;padding:13px 14px;border-radius:10px;background:#f1f6fa;color:#60798d;font-size:12px;line-height:1.6}
+.message{margin-top:16px;font-size:14px;line-height:1.5;color:#276b4d}
+.error{color:#a33e39}
+hr{border:0;border-top:1px solid #e5edf3;margin:27px 0 23px}
+.results-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+h2{font-size:18px;margin:0;color:#1c3d56}
+.refresh{border:1px solid #d7e3ed;background:#fff;color:#4b6a82;border-radius:8px;padding:8px 11px;cursor:pointer}
+.result{margin:13px 0}.result-label{display:flex;justify-content:space-between;font-size:13px;margin-bottom:7px;color:#38566e}
+.track{height:9px;background:#edf2f6;border-radius:20px;overflow:hidden}.bar{height:100%;background:#5b9bc0;border-radius:20px;width:0;transition:width .25s}
+.total{font-size:12px;color:#7890a2;margin-top:12px}
+@media(max-width:480px){body{padding:18px 11px}.card{padding:22px 18px}.options{grid-template-columns:1fr}.option{padding:13px}.option.selected{padding:12px}}
+</style>
+</head>
+<body>
+<main>
+  <div class="brand">Bình chọn nội bộ nhóm</div>
+  <section class="card">
+    <h1>Ai sẽ đại diện nhóm thuyết trình?</h1>
+    <p class="lead">Hãy chọn đúng <b>2 trong 4 ứng viên</b> mà bạn đánh giá phù hợp nhất để đảm nhận phần thuyết trình. Bạn có thể tự chọn mình.</p>
+    <div class="progress"><span>Lựa chọn của bạn</span><span class="counter" id="counter">0/2 đã chọn</span></div>
+    <div class="options" id="options">
+      <label class="option"><input type="checkbox" value="VY"><strong>VY</strong></label>
+      <label class="option"><input type="checkbox" value="THƯ"><strong>THƯ</strong></label>
+      <label class="option"><input type="checkbox" value="LIỄU"><strong>LIỄU</strong></label>
+      <label class="option"><input type="checkbox" value="HIỀN"><strong>HIỀN</strong></label>
+    </div>
+    <button class="primary" id="submit" disabled>Gửi phiếu bình chọn</button>
+    <div id="message" class="message" role="status" aria-live="polite"></div>
+    <div class="notice">Phiếu không yêu cầu tên, email hay đăng nhập. Hệ thống chỉ lưu tổng số lượt chọn của từng ứng viên, không lưu nội dung từng phiếu. Trình duyệt này sẽ được đánh dấu đã bình chọn sau khi gửi thành công. Việc đổi thiết bị, đổi trình duyệt hoặc xóa dữ liệu trình duyệt có thể cho phép gửi thêm phiếu.</div>
+    <hr>
+    <div class="results-head"><h2>Kết quả tổng hợp</h2><button class="refresh" id="refresh">Cập nhật</button></div>
+    <div id="results"><div class="total">Đang tải kết quả…</div></div>
+    <div class="total" id="total"></div>
+  </section>
+</main>
+<script>
+const KEY='team_ballot_2026_submitted_v1';
+const boxes=[...document.querySelectorAll('input[type=checkbox]')];
+const counter=document.getElementById('counter');
+const submit=document.getElementById('submit');
+const message=document.getElementById('message');
+const options=document.getElementById('options');
+function selected(){return boxes.filter(b=>b.checked).map(b=>b.value)}
+function sync(){
+ const picks=selected();counter.textContent=picks.length+'/2 đã chọn';
+ boxes.forEach(b=>{b.closest('.option').classList.toggle('selected',b.checked);b.disabled=localStorage.getItem(KEY)==='yes'});
+ submit.disabled=picks.length!==2||localStorage.getItem(KEY)==='yes';
+ if(localStorage.getItem(KEY)==='yes'){submit.textContent='Bạn đã bình chọn trên trình duyệt này';}
+}
+boxes.forEach(b=>b.addEventListener('change',()=>{if(selected().length>2)b.checked=false;sync()}));
+async function loadResults(){
+ const root=document.getElementById('results');
+ try{
+  const r=await fetch('/api/results',{cache:'no-store'});if(!r.ok)throw new Error();
+  const data=await r.json();let sum=0;
+  root.innerHTML='';
+  data.results.forEach(item=>{sum+=Number(item.votes);const row=document.createElement('div');row.className='result';
+   const label=document.createElement('div');label.className='result-label';
+   const name=document.createElement('strong');name.textContent=item.candidate;
+   const count=document.createElement('span');count.textContent=item.votes+' lượt chọn';
+   label.append(name,count);const track=document.createElement('div');track.className='track';
+   const bar=document.createElement('div');bar.className='bar';bar.style.width=(sum===-1?0:(Number(item.votes)/Math.max(1,...data.results.map(x=>Number(x.votes)))*100))+'%';
+   track.append(bar);row.append(label,track);root.append(row);
+  });
+  document.getElementById('total').textContent='Tổng số lượt chọn: '+sum;
+ }catch(e){root.textContent='Không thể tải kết quả lúc này.'}
+}
+submit.addEventListener('click',async()=>{
+ const picks=selected();if(picks.length!==2)return;
+ submit.disabled=true;submit.textContent='Đang gửi…';message.textContent='';message.className='message';
+ try{
+  const r=await fetch('/api/vote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({picks})});
+  const data=await r.json();if(!r.ok)throw new Error(data.error||'Gửi phiếu thất bại.');
+  localStorage.setItem(KEY,'yes');boxes.forEach(b=>b.checked=false);
+  message.textContent='Phiếu của bạn đã được ghi nhận. Cảm ơn bạn đã tham gia.';
+  sync();await loadResults();
+ }catch(e){message.textContent=e.message;message.className='message error';submit.textContent='Gửi phiếu bình chọn';sync()}
+});
+document.getElementById('refresh').addEventListener('click',loadResults);
+sync();loadResults();
+</script>
+</body></html>
