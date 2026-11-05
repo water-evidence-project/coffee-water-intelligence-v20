@@ -13,7 +13,7 @@ const candidates = ['VY', 'THƯ', 'LIỄU', 'HIỀN'];
 
 app.disable('x-powered-by');
 app.use(express.json({ limit: '2kb' }));
-app.use(express.static('public', { etag: true, maxAge: '5m' }));
+app.use(express.static(require('path').join(__dirname, 'public'), { etag: true, maxAge: '5m' }));
 
 app.get('/api/results', async (_req, res) => {
   try {
